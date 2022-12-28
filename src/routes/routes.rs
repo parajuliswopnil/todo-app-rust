@@ -1,44 +1,43 @@
 use crate::model::{Todo, NewTodo};
 use crate::db::db_connection;
+
+use crate::error_handler::CustomError;
+use actix_web::web::to;
+use clap::Error;
 use diesel::prelude::*;
+use actix_web::{delete, get, post, put, web, HttpResponse};
 
-pub fn create_todo(todo: NewTodo){
-    use crate::schema::todos::dsl::*;
-
-    let mut connection = db_connection();
-
-    let new_todo = NewTodo{
-        title: &todo.title,
-        description: &todo.description,
-        start_time: todo.start_time,
-        end_time: todo.end_time
-    };
-
-    diesel::insert_into(todos).values(&new_todo).execute(&mut connection).expect("Error in saving todo");
+#[post("/create")]
+async fn create(todo: web::Json<NewTodo>) -> Result<HttpResponse, CustomError>{
+    println!("reached here");
+    let todo = Todo::create(todo.into_inner())?;
+    Ok(HttpResponse::Ok().json(todo))
 }
 
-pub fn update_todo(todo: Todo){
-    use crate::schema::todos::dsl::*;
-    let mut connection = db_connection();
-
-    let db_todo = Todo{
-        id: todo.id,
-        title: todo.title,
-        description: todo.description,
-        start_time: todo.start_time,
-        end_time: todo.end_time,
-    };
-
-    diesel::update(todos.find(todo.id)).set(&db_todo).execute(&mut connection).expect("Error in updating todo");
+#[post("/update/{id}")]
+async fn update(todo: web::Json<Todo>) -> Result<HttpResponse, CustomError>{
+    println!("updating todo");
+    let todo = Todo::update(todo.into_inner())?;
+    Ok(HttpResponse::Ok().json(todo))
 }
 
-pub fn show_todos(){
+#[post("/delete")]
+async fn delete(todo: web::Json<Todo>) -> Result<HttpResponse, CustomError>{
+    println!("deleting todo");
+    let todo = Todo::delete(todo.into_inner())?;
+    Ok(HttpResponse::Ok().json(todo))
+}
+
+#[get("/todos")]
+async fn show_todos() -> Result<HttpResponse, CustomError>{
     println!("Showing todos");
-    use crate::schema::todos::dsl::*;
+    let todo = Todo::get_todo()?;
+    Ok(HttpResponse::Ok().json(todo))
+}
 
-    let mut connection = db_connection();
-    let results = todos.load::<Todo>(&mut connection).expect("Error loading videos");
-    for video in results{
-        println!("{:?}", video);
-    }
+pub fn init_routes(config: &mut web::ServiceConfig){
+    config.service(create);
+    config.service(update);
+    config.service(delete);
+    config.service(show_todos);
 }
