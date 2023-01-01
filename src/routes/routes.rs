@@ -1,4 +1,5 @@
 use crate::model::{Todo, NewTodo};
+use crate::model::{User, Users, Login};
 use crate::db::db_connection;
 
 use crate::error_handler::CustomError;
@@ -35,9 +36,25 @@ async fn show_todos() -> Result<HttpResponse, CustomError>{
     Ok(HttpResponse::Ok().json(todo))
 }
 
+#[post("/signup")]
+async fn sign_up(users: web::Json<Users>) -> Result<HttpResponse, CustomError> {
+    println!("Signing you up");
+    let user = User::sign_up(users.into_inner())?;
+    Ok(HttpResponse::Ok().json(user))
+}
+
+#[post("/login")]
+async fn login(users: web::Json<Login>) -> Result<HttpResponse, CustomError>{
+    println!("Logging you on");
+    let user = User::login(users.into_inner())?;
+    Ok(HttpResponse::Ok().json(user))
+}
+
 pub fn init_routes(config: &mut web::ServiceConfig){
     config.service(create);
     config.service(update);
     config.service(delete);
     config.service(show_todos);
+    config.service(sign_up);
+    config.service(login);
 }

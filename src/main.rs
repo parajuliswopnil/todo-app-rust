@@ -4,6 +4,12 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
+#[macro_use]
+extern crate data_encoding;
+
+#[macro_use]
+extern crate ring;
+
 extern crate dotenv;
 
 use actix_web::{App, HttpServer};
@@ -15,6 +21,7 @@ mod schema;
 mod db;
 mod routes;
 mod error_handler;
+mod helpers;
 
 use model::NewTodo;
 use model::Todo;
